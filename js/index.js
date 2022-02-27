@@ -32,22 +32,17 @@ class SitemapExtractor {
   static get Sitemaps() {
     return SitemapExtractor.sitemaps;
   }
-
-  // static arrayFind(MMSID_array, findMMS){
-  //   const MMSID_array = MMSID;
-  //   const findMMS = array.find(element => element==findMMS);
-  //   console.log(arrayFind);
-  // }
 }
+
 
 SitemapExtractor.extract('https://researchrepository.rmit.edu.au/view/google/ResearchAsset/siteindex.xml').then((sitemap) => {
   axios.get(sitemap[0]).then(res => {
     xml2json.parseString(res.data, (err, result) => {
       const shorter = result.urlset.url.map(record => record.loc[0]).map(uri => uri.replace('https://', ''));     //Removes the HTTPS 
       const MMSID = (shorter.map(url => url.split('/').slice(-1)).flat(Infinity)).map(Number);                    //Pulling the MMSIDs to array
-      console.log(MMSID)
-      const findMMS = MMSID.find(element => element=='9921862909301340');
-      console.log(findMMS);
+      //console.log(MMSID)
+      const findMMS = MMSID.find(element => element=='test');
+      console.log(findMMS)
     })
   })
 });
