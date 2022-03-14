@@ -34,14 +34,17 @@ class SitemapExtractor {
   }
 }
 
+// URL should be: https://XXXXXX.exploro.exlibrisgroup.com/view/google/ResearchAsset/siteindex.xml
+// https://csu-csus.esploro.exlibrisgroup.com/view/google/ResearchAsset/siteindex.xml
+// https://researchportal.scu.edu.au/view/google/ResearchAsset/siteindex.xml
 
-SitemapExtractor.extract('https://researchrepository.rmit.edu.au/view/google/ResearchAsset/siteindex.xml').then((sitemap) => {
+SitemapExtractor.extract('https://researchportal.scu.edu.au/view/google/ResearchAsset/siteindex.xml').then((sitemap) => {
   axios.get(sitemap[0]).then(res => {
     xml2json.parseString(res.data, (err, result) => {
       const shorter = result.urlset.url.map(record => record.loc[0]).map(uri => uri.replace('https://', ''));     //Removes the HTTPS 
       const MMSID = (shorter.map(url => url.split('/').slice(-1)).flat(Infinity)).map(Number);                    //Pulling the MMSIDs to array
-      //console.log(MMSID)
-      const findMMS = MMSID.find(element => element=='test');
+      const findMMS = MMSID.find(element => element=='99449998202621');
+      //console.log(findMMS, "and the location is: " +result.urlset.url.map(record => record.loc[0]))
       console.log(findMMS)
     })
   })
