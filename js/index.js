@@ -1,6 +1,10 @@
 import axios from 'axios';
 import xml2json from 'xml2js';
 
+// Readline 
+import * as readline from 'node:readline/promises';
+import { stdin as input, stdout as output, stdout } from 'node:process';
+
 class SitemapExtractor {
   static locations; // Getting <loc> tags
   static sitemaps;  //The sitemaps
@@ -37,16 +41,35 @@ class SitemapExtractor {
 // URL should be: https://XXXXXX.exploro.exlibrisgroup.com/view/google/ResearchAsset/siteindex.xml
 // https://csu-csus.esploro.exlibrisgroup.com/view/google/ResearchAsset/siteindex.xml
 // https://researchportal.scu.edu.au/view/google/ResearchAsset/siteindex.xml
+// https://researchportal.scu.edu.au/view/google/ResearchAsset/siteindex.xml
+// https://usc-researchmanagement.esploro.exlibrisgroup.com/view/google/ResearchAsset/siteindex.xml
 
-SitemapExtractor.extract('https://researchportal.scu.edu.au/view/google/ResearchAsset/siteindex.xml').then((sitemap) => {
+
+
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout});
+const siteMapURL = await rl.question('Enter siteMapURL: ');
+rl.close();
+const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout});
+const assetID = await rl2.question('Enter MMSID: ');
+rl2.close();
+
+console.log('Please wait for the search resutls....')
+
+
+SitemapExtractor.extract(siteMapURL).then((sitemap) => {
   axios.get(sitemap[0]).then(res => {
     xml2json.parseString(res.data, (err, result) => {
       const shorter = result.urlset.url.map(record => record.loc[0]).map(uri => uri.replace('https://', ''));     //Removes the HTTPS 
       const MMSID = (shorter.map(url => url.split('/').slice(-1)).flat(Infinity)).map(Number);                    //Pulling the MMSIDs to array
-      const findMMS = MMSID.find(element => element=='99449998202621');
+      const findMMS = MMSID.find(element => element==assetID);
       //console.log(findMMS, "and the location is: " +result.urlset.url.map(record => record.loc[0]))
-      console.log(findMMS)
+      if (findMMS===assetID){
+        console.log('Asset ID was found')
+      }
+      else{
+        console.log('This asset ID was not published')
+      }
+      // console.log(findMMS)
     })
   })
 });
-
