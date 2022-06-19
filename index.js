@@ -38,7 +38,7 @@ class SitemapExtractor {
 }
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout});
-const siteMapURL = await rl.question('Enter siteMapURL: ');
+const siteMapURL = await rl.question('Input sitemap URL: ');
 rl.close();
 const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout});
 const assetID = await rl2.question('Enter MMSID: ');
