@@ -33,7 +33,7 @@ async function mapSitemaps(sitemap) {
 				return acc;
 			}, []);
 	} catch (error) {
-    console.log({error, origin: '[index] fetchFrom(sitemap)', parameters: [{ sitemap, siteMapXML, parsedXMLSitemap }]});
+    //console.log({error, origin: '[index] fetchFrom(sitemap)', parameters: [{ sitemap, siteMapXML, parsedXMLSitemap }]});
   }
 }
 
@@ -45,7 +45,7 @@ async function searchMMIDs() {
 		const [result] = mappedSitemaps.flat(Infinity);
 		console.log(result);
 	} catch (error) {
-    console.log({error, origin: '[index] searchMMIDs()', parameters: undefined});
+   // console.log({error, origin: '[index] searchMMIDs()', parameters: undefined});
 	}
 }
 
