@@ -1,64 +1,52 @@
-import axios from 'axios';
+import fetchFrom from './src/http.js';
+import {getSitemapsFromIndexURL} from './src/xml.js';
+
 import xml2json from 'xml2js';
-// Readline 
+// Readline
 import * as readline from 'node:readline/promises';
-import { stdin as input, stdout as output, stdout } from 'node:process';
-
-class SitemapExtractor {
-  static locations; // Getting <loc> tags
-  static sitemaps;  //The sitemaps
-
-  static async getLocations(url) {
-    const result = await axios.get(url);
-    const parsedSitemap = await xml2json.parseStringPromise(result.data);
-    SitemapExtractor.locations = parsedSitemap;
-  }
-
-  static extractSitemaps() {
-    SitemapExtractor.sitemaps = SitemapExtractor.locations.sitemapindex.sitemap;
-  }
-
-  //Reorder the sitemaps in ASC sorting
-  static mapAndSortSitemaps() {
-    SitemapExtractor.sitemaps = SitemapExtractor.sitemaps.map(record => record.loc[0]);
-    SitemapExtractor.sitemaps = SitemapExtractor.sitemaps.sort((a, b) => a.slice(-1) - b.slice(-1));
-  }
-
-  //Extract the sitemaps URL from the <loc> tags.
-  static async extract(url) {
-    await SitemapExtractor.getLocations(url);
-    SitemapExtractor.extractSitemaps();
-    SitemapExtractor.mapAndSortSitemaps();
-    return this.sitemaps;
-  }
-
-  static get Sitemaps() {
-    return SitemapExtractor.sitemaps;
-  }
-}
+import {stdin as input, stdout as output, stdout} from 'node:process';
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout});
 const siteMapURL = await rl.question('Input sitemap URL: ');
 rl.close();
 const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout});
-const assetID = await rl2.question('Enter MMSID: ');
+const MMSID = await rl2.question('Enter MMSID: ');
 rl2.close();
 console.log('Please wait for the search resutls....')
 
-SitemapExtractor.extract(siteMapURL).then((sitemap) => {
-  axios.get(sitemap[0]).then(res => {
-    xml2json.parseString(res.data, (err, result) => {
-      const shorter = result.urlset.url.map(record => record.loc[0]).map(uri => uri.replace('https://', ''));     //Removes the HTTPS 
-      const MMSID = (shorter.map(url => url.split('/').slice(-1)).flat(Infinity)).map(Number);                    //Pulling the MMSIDs to array
-      const findMMS = MMSID.find(element => element==assetID);
-      //console.log(findMMS, "and the location is: " +result.urlset.url.map(record => record.loc[0]))
-      if (findMMS===assetID){
-        console.log('Asset ID was found')
-      }
-      else{
-        console.log('This asset ID was not published')
-      }
-      // console.log(findMMS)
-    })
-  })
-});
+  // const [siteMapURL, MMSID] = process.argv.slice(2);
+
+async function mapSitemaps(sitemap) {
+	try {
+		const siteMapXML = await fetchFrom(sitemap);
+		const parsedXMLSitemap = await xml2json.parseStringPromise(siteMapXML);
+		return parsedXMLSitemap.urlset.url
+			.flatMap(entry => entry.loc)
+			.flatMap(loc => ({
+				loc,
+				assetId: Number(loc.split('/').pop()),
+			}))
+			.reduce((acc, currentItem) => {
+				if (currentItem.assetId === Number(MMSID)) {
+					acc.push({ location: currentItem.loc, sitemap});
+				}
+				return acc;
+			}, []);
+	} catch (error) {
+    console.log({error, origin: '[index] fetchFrom(sitemap)', parameters: [{ sitemap, siteMapXML, parsedXMLSitemap }]});
+  }
+}
+
+async function searchMMIDs() {
+	try {
+ 		const sitemapsURL = await fetchFrom(siteMapURL);   
+		const sitemaps = await getSitemapsFromIndexURL(sitemapsURL);
+ 		const mappedSitemaps = await Promise.all(sitemaps.map(mapSitemaps));
+		const [result] = mappedSitemaps.flat(Infinity);
+		console.log(result);
+	} catch (error) {
+    console.log({error, origin: '[index] searchMMIDs()', parameters: undefined});
+	}
+}
+
+searchMMIDs();
