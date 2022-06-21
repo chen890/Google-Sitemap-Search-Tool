@@ -10,11 +10,9 @@ const rl = readline.createInterface({ input: process.stdin, output: process.stdo
 const siteMapURL = await rl.question('Input sitemap URL: ');
 rl.close();
 const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout});
-const MMSID = await rl2.question('Enter MMSID: ');
+const MMSID_or_Parameter = await rl2.question('Enter MMSID or Parameter: ');
 rl2.close();
 console.log('Please wait for the search resutls....')
-
-  // const [siteMapURL, MMSID] = process.argv.slice(2);
 
 async function mapSitemaps(sitemap) {
 	try {
@@ -22,13 +20,17 @@ async function mapSitemaps(sitemap) {
 		const parsedXMLSitemap = await xml2json.parseStringPromise(siteMapXML);
 		return parsedXMLSitemap.urlset.url
 			.flatMap(entry => entry.loc)
-			.flatMap(loc => ({
+			.flatMap(loc => {
+        const assetId = loc.split('/').pop();
+        return {
 				loc,
-				assetId: Number(loc.split('/').pop()),
-			}))
+				assetId
+			}})
 			.reduce((acc, currentItem) => {
-				if (currentItem.assetId === Number(MMSID)) {
-					acc.push({ location: currentItem.loc, sitemap});
+        
+        const parameter = typeof MMSID_or_Parameter === 'string' ?  String(MMSID_or_Parameter) : Number(MMSID_or_Parameter); 
+				if (currentItem.assetId === parameter) {
+          acc = [...acc, { location: currentItem.loc, sitemap}];
 				}
 				return acc;
 			}, []);
