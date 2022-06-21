@@ -9,6 +9,8 @@ import xml from 'xml2js';
 export async function getSitemapsFromIndexURL(indexUrl) {
 	try {
 		const RawLOCs = await xml.parseStringPromise(indexUrl);
+		// console.log(RawLOCs)
+		// console.log(RawLOCs.sitemapindex)
     return RawLOCs.sitemapindex.sitemap.flatMap(childSitemap => childSitemap.loc);
 	} catch (error) {
 		console.log({error, origin: '[xml] getSitemapsFromIndexURL(indexUrl)', parameter: indexUrl});
