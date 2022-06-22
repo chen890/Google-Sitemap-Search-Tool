@@ -10,8 +10,6 @@ const siteMapURL = await rl.question('Input sitemap URL: ');
 rl.close();
 const rl1 = readline.createInterface({ input: process.stdin, output: process.stdout});
 const sitemapOrProfile = await rl1.question('For MMSID  insert `mmsid` and for Profile insert `profile`? ')
-
-  // const [siteMapURL, MMSID] = process.argv.slice(2);
 if (sitemapOrProfile==='mmsid'){
 	rl1.close();
 	const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout});
@@ -47,10 +45,8 @@ if (sitemapOrProfile==='mmsid'){
 			const [result] = mappedSitemaps.flat(Infinity);
 			console.log(result);
 		} catch (error) {
-	   // console.log({error, origin: '[index] searchMMIDs()', parameters: undefined});
 		}
 	}
-	
 	searchMMIDs();
 }
 if (sitemapOrProfile==='profile'){
@@ -59,22 +55,19 @@ if (sitemapOrProfile==='profile'){
 		const researcher_url_identifier = await rl2.question('Enter URL Identifier: ');
 		rl2.close();
 		console.log('Please wait for the search resutls....')
-
-
 		async function mapSitemaps(sitemap) {
 			try {
 				const siteMapXML = await fetchFrom(sitemap);
 				const parsedXMLSitemap = await xml2json.parseStringPromise(siteMapXML);
-
-				parsedXMLSitemap.urlset.url
+				return parsedXMLSitemap.urlset.url
 					.flatMap(entry => entry.loc)
 					.flatMap(loc => ({
 						loc,
-						parameter_input: new String(loc.split('/').pop()),
+						parameter_input: loc.split('/').pop(),
 					}))
 					.reduce((acc, currentItem) => {
-						if (currentItem.url_identifier == String(researcher_url_identifier)) {
-							acc.push({ location: currentItem.loc, sitemap});
+						if (currentItem.parameter_input === researcher_url_identifier) {
+							acc = [...acc,{ location: currentItem.loc, sitemap}]
 						}
 						return acc;
 					}, []);
@@ -92,22 +85,18 @@ if (sitemapOrProfile==='profile'){
 				// 		return acc;
 				// 	}, []);
 			} catch (error) {
-			// console.log({error, origin: '[index] fetchFrom(sitemap)', parameters: [{ sitemap, siteMapXML, parsedXMLSitemap }]});
+			console.log({error, origin: '[index] fetchFrom(sitemap)', parameters: [{ sitemap, siteMapXML, parsedXMLSitemap }]});
 		  }
 		}
-		
 		async function searchProfile() {
 			try {
 				const sitemapsURL = await fetchFrom(siteMapURL);   
-				// console.log(sitemapsURL);
 				const sitemaps = await getSitemapsFromIndexURL(sitemapsURL);
-				// console.log(sitemaps);
 				const mappedSitemaps = await Promise.all(sitemaps.map(mapSitemaps));
-				// console.log(mappedSitemaps)
 				const [result] = mappedSitemaps.flat(Infinity);
-				// console.log([result]);
+				 console.log(result);
 			} catch (error) {
-		   // console.log({error, origin: '[index] searchMMIDs()', parameters: undefined});
+		    //console.log({error, origin: '[index] searchMMIDs()', parameters: undefined});
 			}
 		}
 		searchProfile();
