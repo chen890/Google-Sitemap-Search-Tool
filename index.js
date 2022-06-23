@@ -43,7 +43,7 @@ async function searchIdentifier() {
 		const [result] = mappedSitemaps.flat(Infinity);
 		console.log(result);
 	} catch (error) {
-    console.log({error, origin: '[index] searchIdentifier()', parameters: undefined});
+    //console.log({error, origin: '[index] searchIdentifier()', parameters: undefined});
 	}
 }
 searchIdentifier();
